@@ -1,32 +1,32 @@
 # Melo for Mac
 
 A native macOS client for [MPD](https://www.musicpd.org) (Music Player Daemon), written in Rust
-with [GPUI](https://www.gpui.rs) — Zed's GPU-accelerated UI framework. Melo never plays audio
-itself: it controls an MPD server over TCP (port 6600) — on this Mac (Homebrew `mpd`) or anywhere
-on the network — and shows you honestly what happens to the signal on the way to your DAC.
+with [GPUI](https://www.gpui.rs), Zed's GPU-accelerated UI framework. Melo never plays audio
+itself: it controls an MPD server over TCP (port 6600), on this Mac (Homebrew `mpd`) or anywhere
+on the network, and shows you honestly what happens to the signal on the way to your DAC.
 
-![Melo — Now Playing](docs/preview.png)
+![Melo, Now Playing screen](docs/preview.png)
 
 It started life as a port of the SwiftUI Melo app (`Melo-macOS` in the Melo monorepo) and now
 stands alone; the MPD client is a hand-rolled implementation of the ~24 commands the app needs.
 
 ## Performance: SwiftUI vs GPUI
 
-Same app, same Mac, same local MPD server — the SwiftUI build it replaces against this GPUI build
+Same app, same Mac, same local MPD server: the SwiftUI build it replaces against this GPUI build
 (see [Benchmarking](#benchmarking-against-the-swiftui-app) for the harness):
 
 | Metric | SwiftUI build | GPUI build | |
 |---|---:|---:|---|
-| **Cold launch** — to first interactive frame | 1.4 s | **0.3 s** | ~4.7× faster |
-| **Memory** — idle with a 40k-track library | 182 MB | **48 MB** | ~3.8× less |
-| **Scroll** — full library list, ProMotion display | 42 fps | **120 fps** | pinned to refresh rate |
-| **CPU** — during gapless playback | 8.6 % | **1.2 %** | ~7× less |
+| **Cold launch**: to first interactive frame | 1.4 s | **0.3 s** | ~4.7× faster |
+| **Memory**:" idle with a 40k-track library | 182 MB | **48 MB** | ~3.8× less |
+| **Scroll**: full library list on a ProMotion display | 42 fps | **120 fps** | pinned to refresh rate |
+| **CPU**: during gapless playback | 8.6 % | **1.2 %** | ~7× less |
 
 ## Install
 
 Requires macOS 14 (Sonoma) or later; developed on Apple silicon (Intel builds are untested). There are no binary releases yet
 (signed/notarized builds, a Homebrew cask and in-app updates are on the TODO list), so build it
-from source — it takes a few minutes the first time:
+from source. It takes a few minutes the first time:
 
 ```bash
 # 1. Rust toolchain (one-time), if you don't have it
@@ -82,7 +82,7 @@ Build notes:
 - First build is a few minutes (GPUI + deps); incremental builds are seconds.
 - Debug env vars: `MELO_SCREEN=queue|library|settings` opens that screen at launch,
   `MELO_PERF=1` prints the perf probes described below.
-- User data: `~/Library/Application Support/Melo/profiles.json` (server profiles — passwords
+- User data: `~/Library/Application Support/Melo/profiles.json` (server profiles; passwords
   in plaintext for now, Keychain is a TODO), `~/Library/Caches/Melo/coverArt/`.
 
 ## Features
@@ -105,7 +105,7 @@ Build notes:
 
 ## Audio: outputs, Signal Path, bit-perfect
 
-Melo never touches audio — MPD does — so this is split honestly in two:
+Melo never touches audio (MPD does), so this is split honestly in two:
 
 **From any server (protocol only):**
 - **Output button** (speaker, transport bar) → list of MPD outputs. Click a row to *route* playback there
@@ -120,22 +120,22 @@ Melo never touches audio — MPD does — so this is split honestly in two:
   client drifts the server the pill turns amber with **Re-apply**.
 
 **For the Homebrew MPD on this Mac (Settings › Local MPD):** pick the CoreAudio device (your DAC),
-**Exclusive access** (`hog_device`, recommended for USB/Thunderbolt DACs — MPD holds the device while
+**Exclusive access** (`hog_device`, recommended for USB/Thunderbolt DACs: MPD holds the device while
 its output is enabled), **DoP**, **Volume control** None / Hardware / Software (`mixer_type`), and clear
 `volume_normalization` / `audio_output_format`. Bluetooth / AirPlay devices automatically get no hog and
-a pinned `format "44100:24:2"` (CoreAudio rejects other rates there — that's the `-10851` failure).
+a pinned `format "44100:24:2"` (CoreAudio rejects other rates there; that's the `-10851` failure).
 **Save & Restart MPD** rewrites `mpd.conf` structure-preservingly and restarts the daemon (SIGTERM →
 SIGKILL if it hangs; SIGHUP doesn't reload outputs).
 
 **Sleep/wake:** macOS re-enumerates USB DACs on wake and MPD keeps its old exclusive (hog) claim, so
 every open fails with `OSStatus 560947818` (`!hog`) until MPD is restarted. Melo listens for
 `NSWorkspaceDidWakeNotification`, reconnects its own sockets, and cycles the enabled local osx outputs
-(`disableoutput` → `enableoutput`) so the DAC is released and re-acquired — no restart. If the error
+(`disableoutput` → `enableoutput`) so the DAC is released and re-acquired, no restart needed. If the error
 ever shows up anyway, the Signal Path offers **Re-open <output>**.
 
 The Signal Path asks CoreAudio directly (tiny FFI, polled every 2 s) for the device behind each enabled
-output: transport, *current* and *maximum* sample rate, and whether it is hogged — so it can say
-"Bluetooth: re-encoded", "CoreAudio downsamples 192 → 96 kHz — Scarlett tops out at 96 kHz", or
+output: transport, *current* and *maximum* sample rate, and whether it is hogged, so it can say
+"Bluetooth: re-encoded", "CoreAudio downsamples 192 → 96 kHz, Scarlett tops out at 96 kHz", or
 "exclusive ✓". MPD's `osx` plugin syncs the DAC to the source rate and never resamples itself, so
 *wired DAC · Exclusive on · Volume None · no DSP · source ≤ device max* is a bit-perfect chain. MPD
 never restores a device's rate when it lets go, so Audio MIDI Setup showing a device "parked" at
@@ -193,7 +193,7 @@ applies them to the `AppState` entity, and views observe that entity.
 - GPUI has no built-in text field or slider; both are ~200–450 lines of custom
   element code here (`ui/widgets/`). Everything else was plain `div()` styling.
 - Images: hand GPUI an `Arc<gpui::Image>` (encoded bytes) and it decodes on a
-  background thread and caches by content hash — no manual texture management.
+  background thread and caches by content hash; no manual texture management.
 - `uniform_list` needs fixed row heights; the album grid is a list of rows of
   2 fixed-width cells rather than an adaptive grid.
 - The blurred Now Playing backdrop is pre-blurred on the CPU (`image` crate,
@@ -203,4 +203,4 @@ applies them to the `AppState` entity, and views observe that entity.
 
 ## License
 
-[MIT](LICENSE) — © 2026 Libor Vanc.
+[MIT](LICENSE), © 2026 Libor Vanc
