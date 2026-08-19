@@ -1,5 +1,5 @@
 //! About window: icon, name + version, commit, full version string, credits
-//! (MPD, GPUI) with links, and Support / Copy / OK.
+//! (MPD, GPUI) with links, Copy / OK.
 
 use crate::dock_icon::rounded_icon_png;
 use crate::theme::{Theme, UI_FONT};
@@ -47,7 +47,7 @@ pub fn open(cx: &mut App) {
             return;
         }
     }
-    let bounds = Bounds::centered(None, size(px(420.), px(470.)), cx);
+    let bounds = Bounds::centered(None, size(px(440.), px(450.)), cx);
     let handle = cx
         .open_window(
             WindowOptions {
@@ -101,7 +101,7 @@ fn button(
 }
 
 /// Inline link: accent-coloured, underlined on hover, opens `url` in the default browser.
-fn link(id: &'static str, text: &'static str, url: &'static str, theme: &Theme) -> impl IntoElement {
+fn url_link(id: &'static str, text: &'static str, url: &'static str, theme: &Theme) -> impl IntoElement {
     div()
         .id(id)
         .text_color(theme.accent)
@@ -129,10 +129,10 @@ impl Render for AboutView {
             .bg(theme.window_bg)
             .font_family(UI_FONT)
             .text_color(theme.text)
-            .pt(px(56.))
+            .pt(px(48.))
             .pb(px(20.))
             .px(px(28.))
-            .gap(px(10.))
+            .gap(px(8.))
             .child(
                 div().size(px(96.)).child(
                     img(self.icon.clone())
@@ -147,13 +147,9 @@ impl Render for AboutView {
                     .font_weight(gpui::FontWeight::SEMIBOLD)
                     .child(format!("{APP_NAME} {VERSION}")),
             )
-            .child(label("Commit"))
-            .child(value(GIT_SHA.to_owned()))
-            .child(label("Version"))
-            .child(value(full_version()))
-            .child(div().flex_1())
             .child(
                 div()
+                    .mt(px(4.))
                     .flex()
                     .flex_col()
                     .items_center()
@@ -165,26 +161,26 @@ impl Render for AboutView {
                             .flex()
                             .gap(px(4.))
                             .child("Melo is a client for")
-                            .child(link("about-mpd", "MPD, the Music Player Daemon", MPD_URL, &theme)),
+                            .child(url_link("about-mpd", "MPD, the Music Player Daemon", MPD_URL, &theme)),
                     )
                     .child(
                         div()
                             .flex()
                             .gap(px(4.))
                             .child("Built with")
-                            .child(link("about-gpui", "GPUI", GPUI_URL, &theme))
-                            .child("· MIT License · © 2026 Libor Vanc"),
+                            .child(url_link("about-gpui", "GPUI", GPUI_URL, &theme)),
                     ),
             )
+            .child(div().mt(px(6.)).child(label("Commit")))
+            .child(value(GIT_SHA.to_owned()))
+            .child(label("Version"))
+            .child(value(full_version()))
+            .child(div().flex_1())
             .child(
                 div()
                     .flex()
                     .w_full()
-                    .mt(px(6.))
                     .gap(px(8.))
-                    .child(button("about-support", "Support…", &theme, |_, cx| {
-                        cx.open_url(SUPPORT_URL)
-                    }))
                     .child(button("about-copy", "Copy", &theme, |_, cx| {
                         cx.write_to_clipboard(ClipboardItem::new_string(about_text()))
                     }))
