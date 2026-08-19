@@ -150,3 +150,7 @@ applies them to the `AppState` entity, and views observe that entity.
   96×96 → `fast_blur`) because GPUI has no backdrop-blur filter.
 - No `NSStatusItem`, `NSOpenPanel` or Keychain wrappers in GPUI itself; those
   would need `objc2` / `security-framework` directly.
+
+## License
+
+[MIT](LICENSE) — © 2026 Libor Vanc.
