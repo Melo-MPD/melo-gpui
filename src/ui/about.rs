@@ -1,4 +1,5 @@
-//! About window: icon, name + version, commit, full version string, OK / Copy.
+//! About window: icon, name + version, commit, full version string, credits
+//! (MPD, GPUI) with links, and Support / Copy / OK.
 
 use crate::dock_icon::rounded_icon_png;
 use crate::theme::{Theme, UI_FONT};
@@ -13,6 +14,10 @@ pub const APP_NAME: &str = "Melo";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const GIT_SHA: &str = env!("MELO_GIT_SHA");
 
+pub const MPD_URL: &str = "https://www.musicpd.org";
+pub const GPUI_URL: &str = "https://gpui.rs";
+pub const SUPPORT_URL: &str = "https://github.com/Melo-MPD/support";
+
 pub fn full_version() -> String {
     let short: String = GIT_SHA.chars().take(9).collect();
     format!("{VERSION}+gpui.{short}")
@@ -20,7 +25,7 @@ pub fn full_version() -> String {
 
 fn about_text() -> String {
     format!(
-        "{APP_NAME} {VERSION}\nCommit: {GIT_SHA}\nVersion: {}",
+        "{APP_NAME} {VERSION}\nCommit: {GIT_SHA}\nVersion: {}\nSupport: {SUPPORT_URL}",
         full_version()
     )
 }
@@ -42,7 +47,7 @@ pub fn open(cx: &mut App) {
             return;
         }
     }
-    let bounds = Bounds::centered(None, size(px(420.), px(400.)), cx);
+    let bounds = Bounds::centered(None, size(px(420.), px(470.)), cx);
     let handle = cx
         .open_window(
             WindowOptions {
@@ -95,6 +100,17 @@ fn button(
         .child(label)
 }
 
+/// Inline link: accent-coloured, underlined on hover, opens `url` in the default browser.
+fn link(id: &'static str, text: &'static str, url: &'static str, theme: &Theme) -> impl IntoElement {
+    div()
+        .id(id)
+        .text_color(theme.accent)
+        .cursor_pointer()
+        .hover(|d| d.underline())
+        .on_click(move |_, _, cx| cx.open_url(url))
+        .child(text)
+}
+
 impl Render for AboutView {
     fn render(&mut self, window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         let theme = Theme::for_window(window);
@@ -139,13 +155,41 @@ impl Render for AboutView {
             .child(
                 div()
                     .flex()
+                    .flex_col()
+                    .items_center()
+                    .gap(px(4.))
+                    .text_size(px(12.))
+                    .text_color(theme.text_secondary)
+                    .child(
+                        div()
+                            .flex()
+                            .gap(px(4.))
+                            .child("Melo is a client for")
+                            .child(link("about-mpd", "MPD, the Music Player Daemon", MPD_URL, &theme)),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .gap(px(4.))
+                            .child("Built with")
+                            .child(link("about-gpui", "GPUI", GPUI_URL, &theme))
+                            .child("· MIT License · © 2026 Libor Vanc"),
+                    ),
+            )
+            .child(
+                div()
+                    .flex()
                     .w_full()
+                    .mt(px(6.))
                     .gap(px(8.))
-                    .child(button("about-ok", "OK", &theme, |window, _| {
-                        window.remove_window()
+                    .child(button("about-support", "Support…", &theme, |_, cx| {
+                        cx.open_url(SUPPORT_URL)
                     }))
                     .child(button("about-copy", "Copy", &theme, |_, cx| {
                         cx.write_to_clipboard(ClipboardItem::new_string(about_text()))
+                    }))
+                    .child(button("about-ok", "OK", &theme, |window, _| {
+                        window.remove_window()
                     })),
             )
     }

@@ -5,15 +5,53 @@ with [GPUI](https://www.gpui.rs) — Zed's GPU-accelerated UI framework. Melo ne
 itself: it controls an MPD server over TCP (port 6600) — on this Mac (Homebrew `mpd`) or anywhere
 on the network — and shows you honestly what happens to the signal on the way to your DAC.
 
+![Melo — Now Playing](docs/preview.png)
+
 It started life as a port of the SwiftUI Melo app (`Melo-macOS` in the Melo monorepo) and now
 stands alone; the MPD client is a hand-rolled implementation of the ~24 commands the app needs.
 
-## Build & run
+## Install
+
+Requires macOS 14 (Sonoma) or later; developed on Apple silicon (Intel builds are untested). There are no binary releases yet
+(signed/notarized builds, a Homebrew cask and in-app updates are on the TODO list), so build it
+from source — it takes a few minutes the first time:
 
 ```bash
-# One-time: Rust toolchain
+# 1. Rust toolchain (one-time), if you don't have it
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source "$HOME/.cargo/env"
 
+# 2. Build Melo.app
+git clone https://github.com/Melo-MPD/melo-gpui.git
+cd melo-gpui
+scripts/bundle.sh                 # → target/Melo.app
+
+# 3. Install
+cp -R target/Melo.app /Applications/
+open /Applications/Melo.app
+```
+
+Xcode Command Line Tools are needed for the linker and `sips`/`iconutil` (`xcode-select --install`);
+the full Xcode and its Metal Toolchain are **not** required. The bundle is ad-hoc signed, which is
+fine for a locally built app; the first launch asks for local-network access so Melo can find
+MPD servers via Bonjour.
+
+You also need an MPD server to talk to. For one on this Mac:
+
+```bash
+brew install mpd
+# edit ~/.config/mpd/mpd.conf (music_directory, an `audio_output { type "osx" … }` block),
+# or let Melo do it: Settings › Local MPD picks the output device and writes that block for you.
+brew services start mpd            # listens on 127.0.0.1:6600
+```
+
+Melo auto-connects to the last server it used, or to the first one Bonjour finds; add remote
+servers (host, port, password) under Settings › Add Server. Support and bug reports:
+[github.com/Melo-MPD/support](https://github.com/Melo-MPD/support).
+
+## Build & run (development)
+
+```bash
 cargo run            # debug build, opens the window
 cargo test           # protocol / parser / binary-assembly / library-index / signal-path tests
 cargo test live_session -- --ignored --nocapture   # smoke test against mpd on 127.0.0.1:6600
