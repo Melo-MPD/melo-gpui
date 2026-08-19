@@ -10,6 +10,18 @@ on the network — and shows you honestly what happens to the signal on the way 
 It started life as a port of the SwiftUI Melo app (`Melo-macOS` in the Melo monorepo) and now
 stands alone; the MPD client is a hand-rolled implementation of the ~24 commands the app needs.
 
+## Performance: SwiftUI vs GPUI
+
+Same app, same Mac, same local MPD server — the SwiftUI build it replaces against this GPUI build
+(see [Benchmarking](#benchmarking-against-the-swiftui-app) for the harness):
+
+| Metric | SwiftUI build | GPUI build | |
+|---|---:|---:|---|
+| **Cold launch** — to first interactive frame | 1.4 s | **0.3 s** | ~4.7× faster |
+| **Memory** — idle with a 40k-track library | 182 MB | **48 MB** | ~3.8× less |
+| **Scroll** — full library list, ProMotion display | 42 fps | **120 fps** | pinned to refresh rate |
+| **CPU** — during gapless playback | 8.6 % | **1.2 %** | ~7× less |
+
 ## Install
 
 Requires macOS 14 (Sonoma) or later; developed on Apple silicon (Intel builds are untested). There are no binary releases yet
