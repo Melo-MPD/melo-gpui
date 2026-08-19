@@ -1,0 +1,9 @@
+pub mod about;
+pub mod audio_popovers;
+pub mod library;
+pub mod now_playing;
+pub mod queue;
+pub mod root;
+pub mod settings;
+pub mod transport_bar;
+pub mod widgets;
