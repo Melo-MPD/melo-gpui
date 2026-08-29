@@ -24,9 +24,15 @@ Same app, same Mac, same local MPD server: the SwiftUI build it replaces against
 
 ## Install
 
-Requires macOS 14 (Sonoma) or later; developed on Apple silicon (Intel builds are untested). There are no binary releases yet
-(signed/notarized builds, a Homebrew cask and in-app updates are on the TODO list), so build it
-from source. It takes a few minutes the first time:
+Requires macOS 14 (Sonoma) or later; developed on Apple silicon (Intel builds are untested).
+
+**Download:** grab `Melo-<version>-macos-arm64.zip` from the
+[latest release](https://github.com/Melo-MPD/melo-gpui/releases/latest), unzip it and drag
+`Melo.app` to `/Applications`. The build is ad-hoc signed (not notarized), so on first launch
+right-click the app and choose Open, or run `xattr -d com.apple.quarantine /Applications/Melo.app`.
+Signed/notarized builds, a Homebrew cask and in-app updates are on the TODO list.
+
+**Or build from source.** It takes a few minutes the first time:
 
 ```bash
 # 1. Rust toolchain (one-time), if you don't have it
